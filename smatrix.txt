@@ -1,0 +1,171 @@
+/**************************************************************************\
+
+MODULE: smatrix
+
+SUMMARY:
+
+Macros are defined providing template-like classes for sparse rectangular
+matrices.
+
+The macro NTL_smatrix_decl(T,svec_T,vec_svec_T,smat_T) declares a new class
+smat_T representing matrices over T, where svec_T and vec_svec_T are
+classes representing "NTL vectors" over T and svec_T, respectively.  
+The implementation of smat_T can be instantiated with 
+NTL_smatrix_impl(T,svec_T,vec_svec_T,smat_T).
+
+The class generated with NTL_smatrix_decl and NTL_smatrix_impl is actually
+identical to a class generated using the non-sparse versions of these
+macros.  For complete documentation regarding these classes, see the 
+matrix.txt documentation.
+
+If T supports I/O and/or equalility testing, then smat_T can also be made 
+to support these by using NTL_io_smatrix_decl(T,svec_T,vec_svec_T,smat_T),
+NTL_io_smatrix_impl(T,svec_T,vec_svec_T,smat_T),
+NTL_eq_smatrix_decl(T,svec_T,vec_svec_T,smat_T), and
+NTL_eq_smatrix_impl(T,svec_T,vec_svec_T,smat_T)
+
+Also, if a (non-sparse) matrix class for T has been created (mat_T), then
+conv() and transpose() methods for converting between these matricies and
+the sparse equivalents can be declared and implemented using
+NTL_conv_smatrix_decl(T,svec_T,vec_svec_T,mat_T,smat_T) and
+NTL_conv_smatrix_impl(T,svec_T,vec_svec_T,mat_T,smat_T).
+
+Finally, functions for basic arithmatic can be decleared and implemented
+using NTL_math_smatrix_decl(T,vec_T,svec_T,vec_svec_T,smat_T) and
+NTL_math_smatrix_impl(T,vec_T,svec_T,vec_svec_T,smat_T).
+
+For example of typical use, the declaration 
+
+   smat_T M;
+
+creates a 0 x 0 matrix.  We can make it have 10 rows and 20 columns like this:
+
+   M.SetDims(10, 20);
+
+A row can be accessed as M[i], indexing from 0, or as M(i), indexing from 1.
+A matrix entry can be accessed as M[i][j], indexing from 0, or as
+M(i, j), indexing from 1.  
+
+A matrix is represented as a vec_svec_T: a vector of rows, where each row is
+a svec_T.  Any attempt to resize one of the rows so as to create a
+non-rectangular matrix will result in a run-time error.
+
+\**************************************************************************/
+
+class smat_T {
+
+  // set matrix.txt for class description
+
+
+};
+
+// read-only access to underlying representation
+const vec_svec_T& rep(const smat_T& a);
+
+// swaps X and Y (by swapping pointers)
+void swap(smat_T& X, smat_T& Y);
+
+// copies a to x, checking that it is "rectangular"
+void MakeMatrix(smat_T& x, const vec_svec_T& a);
+
+// set to zero matrix (without changing matrix dimensions)
+void clear(smat_T& a);
+
+// test if a is zero matrix
+long IsZero(const smat_T& a);
+
+// copy and transpose src to dest (src and dest must not be the same matrix)
+void transpose(smat_T& dest, const smat_T& src);
+
+
+
+/**************************************************************************\
+
+                       Some convertion routines
+
+The convertion methods can be declared with
+NTL_conv_smatrix_decl(T,svec_T,vec_svec_T,mat_T,smat_T) and implemented with
+NTL_conv_smatrix_impl(T,svec_T,vec_svec_T,mat_T,smat_T).
+
+\**************************************************************************/
+
+// convert between mat_T and smat_T
+void conv(smat_T& dest, const mat_T& src);
+void conv(mat_T& dest, const smat_T& src);
+
+// copy and transpose src to dest
+void transpose(smat_T& dest, const mat_T& src);
+void transpose(mat_T& dest, const smat_T& src);
+
+
+
+/**************************************************************************\
+
+                             Arithmetic
+
+The arithmetic functions and operators can be declared with
+NTL_math_smatrix_decl(T,vec_T,svec_T,vec_svec_T,smat_T) and implemented with
+NTL_math_smatrix_impl(T,vec_T,svec_T,vec_svec_T,smat_T).
+
+These methods require add(x,a,b), sub(x,a,b), mul(x,a,b), negate(x,a),
+and the +, -, * operators for the types T and svec_T.
+
+\**************************************************************************/
+
+void add(smat_T& X, const smat_T& A, const smat_T& B);
+void sub(smat_T& X, const smat_T& A, const smat_T& B);
+void negate(smat_T& X, const smat_T& A);
+
+void mul(smat_T& X, const smat_T& A, const T& b);
+void mul(smat_T& X, const T& a, const smat_T& B);
+
+void mul(vec_T& x, const smat_T& A, const vec_T& b);
+void mul(vec_T& x, const vec_T& a, const smat_T& B);
+
+smat_T operator+(const smat_T& a, const smat_T& b);
+smat_T operator-(const smat_T& a, const smat_T& b);
+smat_T operator-(const smat_T& a);
+
+smat_T operator*(const smat_T& a, const T& b);
+smat_T operator*(const T& a, const smat_T& b);
+
+vec_T operator*(const smat_T& a, const vec_T& b);
+vec_T operator*(const vec_T& a, const smat_T& b);
+
+smat_T& operator+=(smat_T& x, const smat_T& a);
+smat_T& operator-=(smat_T& x, const smat_T& a);
+
+
+
+/**************************************************************************\
+
+                            Input/Output
+
+The I/O operators can be declared with 
+NTL_io_smatrix_decl(T,svec_T,vec_svec_T,smat_T), and
+implemented using NTL_io_smatrix_impl(T,svec_T,vec_svec_T,smat_T).  
+I/O is implemented using the underlying I/O operators for vec_svec_T.
+
+\**************************************************************************/
+
+istream& operator>>(istream&, smat_T&);
+ostream& operator<<(ostream&, const smat_T&); 
+
+
+
+/**************************************************************************\
+
+                              Equality Testing
+
+The equality testing operators == and != can be declared
+NTL_eq_smatrix_decl(T,svec_T,vec_svec_T,smat_T), and
+implemented using NTL_eq_smatrix_impl(T,svec_T,vec_svec_T,smat_T).  
+Equality testing is implemented using the underlying 
+equality operators for vec_svec_T.
+
+\**************************************************************************/
+
+long operator==(const smat_T& a, const smat_T& b);
+long operator!=(const smat_T& a, const smat_T& b);
+
+

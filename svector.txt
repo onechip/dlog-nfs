@@ -1,0 +1,353 @@
+/**************************************************************************\
+
+MODULE: svector
+
+SUMMARY:
+
+Macros are defined providing template-like classes for dynamic-sized sparse
+arrays.
+
+The macro NTL_svector_decl(T,vec_T,svec_T) declares a class svec_T and the
+implementation of this class is instantiated with the macro
+NTL_svector_impl(T,vec_T,svec_T,zero_T).  T is the underlying type, vec_T
+is a (non-sparse) vector declared and implemented using 
+NTL_vector_decl(T,vec_T) and NTL_vector_impl(T,vec_T), respectively.
+For the implemenation, a static const variable representing zero is required
+and is specified as zero_T.  Furthermore, there should exist a function
+IsZero(T) for testing if elements are zero, a function clear(T&) for setting
+elements to zero, and it is presumed that the underlying type has a public
+default constructor, copy constructor, assignment operator, and a destructor.
+
+Note that the type T must be a type name (you'll need to make a typedef for
+the type if this is not the case).
+
+If the type T supports I/O operator << and >>, then svec_T can be made to
+support these operators as well using NTL_io_svector_decl(T,svec_T) and
+NTL_io_svector_impl(T,svec_T).
+
+The same goes for equality operators == and != using 
+NTL_eq_svector_decl(T,svec_T) and NTL_eq_svector_impl(T,svec_T).
+
+If the type T supports standard arithmetic operations such as add(x,a,b),
+sub(x,a,b), mul(x,a,b), negate(x,a), and the operators +, -, and * (as most
+NTL types do) then many standard math function can be declared using
+NTL_math_svector_decl(T,vec_T,svec_T) and implemented with
+NTL_math_svector_impl(T,vec_T,svec_T).
+
+The declaration
+
+   svec_T v;
+
+creates a zero-length vector.  To grow this vector to length n, execute
+
+   v.SetLength(n)
+
+Note that this call does not allocate any space for the elements.  Instead,
+elements are allocated as they are set.  Since this array is intended to be
+used for sparse vectors, the number of elements allocated in the array should
+be much less than the length.  As elements get allocated, the default
+constructor for T is called to initialize the elements.
+
+The current length of a vector is available as v.length().
+
+The i-th vector element (counting from 0) is accessed as v[i].  If the
+macro NTL_RANGE_CHECK is defined, code is emitted to test if 0 <= i <
+v.length().  This check is not performed by default.  
+
+For old-time FORTRAN programmers, the i-th vector element (counting
+from 1) is accessed as v(i).
+
+If v is const and a zero element is accessed (an element for which storage
+has not been allocated), then a reference to static const T_zero is returned.  
+If v is not const and an element that has not been allocated is accessed, 
+space is allocated for the element and initialized to zero.  Because of
+this automatic allocation of elements, care must be taken when iterating
+through the elements of the array.  The most efficient method for iterating
+through the elements is to make use of the methods nvalues(), indices(), and
+values().  Alternatively, cast v to const svec_T before attempting to read
+all of the elements of the array.
+
+Let n = v.length().  Calling v.SetLength(m) with m <= n sets the
+current length of v to m but does not call any destructors or free
+any space.  As discussed above, calling v.SetLength(m) with m > n does not
+allocate any new space or change any existing elements.  Space is allocated
+strictly as needed.
+
+v.MaxLength() is the largest value of n for which v.SetLength(n) was invoked.
+v.SetMaxLength(n) only changes MaxLength if n is greater than the previous
+value of MaxLength.  MaxLength is not of much use in svector.  It is provided
+simply for compatibility with (non-sparse) vectors.
+
+When v's destructor is called, all constructed elements will be destructed, 
+and all space will be relinquished.
+
+Space for storing elements is allocated by the underlying (non-sparse) vector
+class.  See the vector module for details regarding space management.
+
+Note that when new space is required to store the non-zero elements, the space
+is reallocated using realloc, and thus the addresses of vector elements may
+change, possibly creating dangling references to vector elements.  This
+behaviour is also an issue with the (non-sparse) vector classes; however,
+since new space may be allocated when elements of the sparse vector are simply
+referenced (as opposed to when SetLength() is called), extra care must be
+taken when passing references to vector elements around.
+
+v.allocated() is the number of elements which have been allocated, which
+indicates a upper bound on the number of non-zero elements in the array.
+
+\**************************************************************************/
+
+class svec_T {
+public:
+
+  /* Default constructor.  Initial length is zero and no memory
+   * is allocated.  */
+  svec_T(); 
+
+  /* Copy constructor.  Allocates exactly the right amount of memory
+   * to hold the contents of other and uses T's assignment operator to
+   * do the copying.  If compact=true then zero values in other are
+   * not copied.  The "fixed" status of other is not copied.  */
+  svec_T(const svec_T& other, bool compact=false);
+
+  /* Assignment.  Performs an element-wise assignment using T's assignment
+   * operator.  If this is "fixed", other must have the same length as 
+   * this.  */
+  svec_T& operator=(const svec_T& other);
+
+  /* Initialize with a specific length and allocation.  If alloc is zero then
+   * no memory is allocated until needed (and then the default allocation is
+   * made).   */
+  svec_T(INIT_SIZE_TYPE, long length, long alloc=0);
+
+  /* Destructor.  Free all allocated memory.  */
+  ~svec_T();
+
+  /* Set current length to n.  If the length is being set smaller than it was,
+   * values at the end of the vector may disappear.  If n is being set larger,
+   * existing values are not changed.   */
+  void SetLength(long n);
+
+  /* Current length.  */
+  long length() const;
+
+  /* Indexing operation, starting from 0.  This version returns a non-const
+   * reference to a T and will allocate memory for the vector element as
+   * needed.  If you are just reading vector elements and you want to make
+   * sure you maintain the sparsity of the vector, use the const version
+   * instead.   */
+  T& operator[](long i);
+
+  /* Indexing operation, starting from 0.  This version can be used with a
+   * const object and returns a const reference to a T.  No memory will be
+   * allocated.  If the i'th vector element is not allocated, a const
+   * reference to zero will be returned.   */
+  const T& operator[](long i) const;
+
+  /* Indexing operation, starting from 1.  See operator[] for details.  */
+  T& operator()(long i);
+
+  /* Indexing operation, starting from 1.  See operator[] for details.  */
+  const T& operator()(long i) const;
+
+  /* Direct access to arrays, use with care.  */
+  long nvalues() const;
+  const long* indices() const;
+  T* values();
+  const T* values() const;
+
+  /* Release all allocated space and set to length 0.  */
+  void kill();
+
+  /* Ensure enough memory is allocated for n non-zero entries.  */
+  void SetAlloc(long n);
+
+  /* Set maximum length to n.  Does not allocate memory and does not change
+   * the current length.  Here for compatibility with non-sparse vector
+   * classes.  */
+  void SetMaxLength(long n);
+
+  /* Sets length to n and prohibits all future length changes.
+   * FixLength may only be invoked immediately after the default
+   * construction or kill.
+   *
+   * The kill operation is also subsequently prohibited, and swap is
+   * allowed on fixed length vectors of the same length.
+   *
+   * FixLength is provided mainly to implement smat_T, to enforce
+   * the restriction that all rows have the same length.  */
+  void FixLength(long n);
+
+  /* Has this vector been fixed?  */
+  bool fixed() const;
+
+  /* Maximum length ever achieved.  Here for compatibility with non-sparse
+   * vector classes.  */
+  long MaxLength() const;
+
+  /* The number of objects for which space has been allocated but not
+   * necessarily initialized.  */
+  long allocated() const;
+
+  /* Indexing with no range checking.  See operator[] for details.  */
+  T& RawGet(long i);
+  const T& RawGet(long i) const;
+
+  /* Returns position of a in the vector, or -1 if it is not there.
+   * The search is conducted from position 0 to MaxAlloc()-1 of the vector,
+   * and an error is raised if the object is found at position MaxLength()
+   * or higher (in which case a references an uninitialized object).
+   * Note that if NTL_CLEAN_PTR flag is set, this routine takes
+   * linear time, and otherwise, it takes constant time.  */
+  long position(const T& a) const;
+
+  /* Returns position of a in the vector, or -1 if it is not there.
+   * The search is conducted from position 0 to length()-1 of the vector.
+   * Note that if NTL_CLEAN_PTR flag is set, this routine takes
+   * linear time, and otherwise, it takes constant time.  */
+  long position1(const T& a) const;
+
+  /* Eliminate zero values from vector to speed up read-only access.  */
+  void compact();
+
+  /* Set all elements to zero.  Does not change length or release any 
+   * memory.  */
+ void clear();
+
+  /* Swaps this and other by swapping internal pointers.  If either this or
+   * other is fixed, then both must be have the same length.  The "fixed"
+   * status of the vectors is not swapped.  */
+  void swap(svec_T& other);
+};
+
+
+
+/**************************************************************************\
+
+                       Some utility routines
+
+\**************************************************************************/
+
+// test if x is the zero vector
+long IsZero(const svec_T &x);
+
+// make x the zero vector (without changing its length)
+void clear(svec_T &x);
+
+// swap x and y by swapping pointers
+void swap(svec_T &x, svec_T &y);
+
+// convert between vec_T and svec_T
+void conv(svec_T& dest, const vec_T& src);
+void conv(vec_T& dest, const svec_T& src);
+
+// create copy of a with length exactly n (input is truncated or padded
+// with zeros as necessary)
+void VectorCopy(svec_T& x, const svec_T& a, long n);
+
+// create copy of a with length exactly n (input is truncated or padded
+// with zeros as necessary)
+svec_T VectorCopy(const svec_T& a, long n);
+
+
+
+/**************************************************************************\
+
+                             Arithmetic
+
+The arithmetic functions and operators can be declared with 
+NTL_math_svector_decl(T,vec_T,svec_T) and implemented with 
+NTL_math_svector_impl(T,vec_T,svec_T).
+
+These methods require add(x,a,b), sub(x,a,b), mul(x,a,b), negate(x,a),
+and the +, -, * operators for the underlying type T.
+
+\**************************************************************************/
+
+void mul(svec_T& x, const svec_T& a, const T& b);
+void mul(svec_T& x, const T& a, const svec_T& b);
+
+void add(svec_T& x, const svec_T& a, const svec_T& b);
+void sub(svec_T& x, const svec_T& a, const svec_T& b);
+void negate(svec_T& x, const svec_T& a);
+
+void InnerProduct(T& x, const svec_T& a, const svec_T& b);
+
+svec_T operator+(const svec_T& a, const svec_T& b);
+svec_T operator-(const svec_T& a, const svec_T& b);
+svec_T operator-(const svec_T& a);
+
+svec_T operator*(const svec_T& a, const T& b);
+svec_T operator*(const T& a, const svec_T& b);
+
+T operator*(const svec_T& a, const svec_T& b);
+
+svec_T& operator+=(svec_T& x, const svec_T& a);
+svec_T& operator-=(svec_T& x, const svec_T& a);
+
+
+/* mixed vector/svector math methods */
+
+void mul(vec_T& x, const svec_T& a, const T& b);
+void mul(vec_T& x, const T& a, const svec_T& b);
+
+void add(vec_T& x, const vec_T& a, const svec_T& b);
+void add(vec_T& x, const svec_T& a, const vec_T& b);
+void sub(vec_T& x, const vec_T& a, const svec_T& b);
+void sub(vec_T& x, const svec_T& a, const vec_T& b);
+void negate(vec_T& x, const svec_T& a);
+
+void InnerProduct(T& x, const vec_T& a, const svec_T& b);
+void InnerProduct(T& x, const svec_T& a, const vec_T& b);
+
+vec_T operator+(const vec_T& a, const svec_T& b);
+vec_T operator+(const svec_T& a, const vec_T& b);
+vec_T operator-(const vec_T& a, const svec_T& b);
+vec_T operator-(const svec_T& a, const vec_T& b);
+
+T operator*(const vec_T& a, const svec_T& b);
+T operator*(const svec_T& a, const vec_T& b);
+
+vec_T& operator+=(vec_T& x, const svec_T& a);
+vec_T& operator-=(vec_T& x, const svec_T& a);
+
+
+
+/**************************************************************************\
+
+                             Input/Output
+
+The I/O operators can be declared with NTL_io_svector_decl(T,vec_T), and
+implemented using NTL_io_svector_impl(T,vec_T).  Elements are read and written
+using the underlying I/O operators << and >> for T.
+
+The I/O format for a sparse vector v with n elements is:
+
+   [v[0] v[1] ... v[n-1]]
+
+Note that this is the same format used for (non-sparse) vectors, and this
+ensures compatibility among vectors but can waste storage space when really
+sparse vectors are streamed.
+
+\**************************************************************************/
+
+istream& operator>>(istream&, svec_T&);
+ostream& operator<<(ostream&, const svec_T&);
+
+
+
+/**************************************************************************\
+
+                              Equality Testing
+
+The equality testing operators == and != can be declared
+with NTL_eq_svector_decl(T,svec_T) and implemented with 
+NTL_eq_svector_impl(T,svec_T).
+The tests are performed using the underlying operator == for T.
+
+\**************************************************************************/
+
+long operator==(const svec_T& a, const svec_T& b);
+long operator!=(const svec_T& a, const svec_T& b);
+
+

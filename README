@@ -1,0 +1,107 @@
+Discrete Logarithms via the Index Calculus Method
+-------------------------------------------------
+
+
+Included in this package is an implementation of the index calculus method
+for solving discrete logarithms in the multiplicative group of GF(p), for
+p prime.  This implementation is intended to be called from inside a program
+supplied by the user; however, a sample program, dlog-test.cpp, is included.
+
+
+COMPILING:
+
+To make this software, do the following:
+
+(1) Edit Makefile to ensure that NTLPREFIX is correctly set.
+(2) Type 'make'.
+
+Note: for (1), if the NTL header files are located in /opt/local/include/NTL/
+and the library is named /opt/local/lib/libntl.a, then NTLPREFIX should be 
+set to /opt/local.
+
+Note: for best results, compile NTL to use GMP as its underlying large integer
+package (LIP).  The Makefile assumes you have done this.  If you aren't using
+GMP, you may need to remove the '-lgmp' from the NTLLIB line.
+
+
+INTERFACE:
+
+Please examine the program dlog-test.cpp for an example of the use of the
+interface.  The essential points are:
+
+1. Include the header file IndexCalculus.h.
+
+2. ZZ_p::init() has to be called with an appropriate modulus.
+
+3. Create an instance of the class IndexCalculus, passing it an appropriate
+   base for the logarithm function.  The index calculus precomputation
+   happens at this moment.
+
+4. Compute individual logarithms by calling the log() method of the 
+   IndexCalculus object.  The log() function will return a negative number 
+   if there was an error.
+
+
+CHOICE OF GROUP:
+
+This software works best if the modulus, p, is chosen as 2q+1, where q is
+prime (this is what dlog-test.cpp does).  The software will also work in the
+case where p=rq+1, q prime, and r<100.  If cases where r>100 (but still small)
+are needed, this can be added without much difficulty.  The case where p-1
+is a product of several large primes or a power (square, etc.) is much more
+difficult handle.
+
+The base for the logarithms can be any group element, but a small base
+(especially a prime generator) will result in a slightly faster precomputation.
+The algorithm should also work in the case where the base is not a generator of
+the group; however, some logarithms will be impossible to compute.
+
+
+PERFORMANCE:
+
+The precomputation requires much more time than the computation of an 
+individual logarithm.  Furthermore, the time required to compute each
+individual logarithm is highly variable, is faster for small residules,
+and gets faster (ever so slowly) as more logarithms are computed.  When
+the same logarithm is computed multiple times, it will be almost instantaneous
+the second and subsequent times due to the internal caching that is done.
+
+The precomputation has been optimized on an Athalon XP1700 machine with 256MB
+of RAM so it should be as fast as it can be on any similar machine.  The
+computation of an individual logarithm has not been as thoroughly optimized
+and uses a substandard algorithm for testing smoothness, so it could be
+improved if necessary.
+
+Here are some rough timing measurements for various problems solved on a 
+400MHz PowerPC with 128MB of RAM:
+
+   64 bit modulus:  1 minute setup,  2 seconds per logarithm
+
+   80 bit modulus:  5 minute setup,  1 minute per logarithm
+
+  100 bit modulus:  1 hour setup,    8 minutes per logarithm
+
+
+POTENTIAL PROBLEMS:
+
+The following warning message may appear:
+
+  IndexCalculus::make_system() 4 INCORRECT LOGARITHMS
+
+This is normal (at least I think it's normal) and it doesn't seem to impact
+the performance of the algorithm as long as the number mentioned is small.
+
+The line:
+
+  DLog_IC_Base::VERBOSE=1;
+  
+can be added before creating an IndexCalculus object to get a lot more messages
+displayed.  With VERBOSE=0, messages regarding sieving and linear algebra
+progress will still be displayed.  If you need the algorithm to operate in
+complete silence, let me know.
+
+
+Question, comments, problems, or other concerns can be emailed to:
+  chris.studholme@utoronto.ca
+
+-- END OF README --
