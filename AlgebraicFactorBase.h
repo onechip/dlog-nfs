@@ -11,6 +11,8 @@
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
 
+NTL_OPEN_NNS;
+
 class AlgebraicFactorBase {
 public:
   // minimal polynomial
@@ -55,5 +57,6 @@ public:
   
 };
 
+NTL_CLOSE_NNS;
 
 #endif

@@ -11,6 +11,8 @@
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
 
+NTL_OPEN_NNS;
+
 
 /* Prove that n is prime.  If n<0, then the absolute value of n is tested.
  * If n is 0 or 1, then 0 is returned.
@@ -55,5 +57,6 @@ void PollardRho(vec_pair_ZZ_long& factors, const ZZ& n,
 		long deterministic=0, long verbose=0);
 
 
+NTL_CLOSE_NNS;
 
 #endif

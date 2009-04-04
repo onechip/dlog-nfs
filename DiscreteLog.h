@@ -13,6 +13,8 @@
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
 
+NTL_OPEN_NNS;
+
 /* Abstract interface to algorithms for finding the discrete log in
  * arbitrary groups and in the group ZZ_p.
  */
@@ -188,5 +190,7 @@ private:
 	 const ZZ& size) const;
     
 };
+
+NTL_CLOSE_NNS;
 
 #endif

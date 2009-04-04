@@ -2,7 +2,7 @@
 #define NTL_svector__H
 
 /*
-Copyright (C) 2002 Chris Studholme
+Copyright (C) 2006 Chris Studholme
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -31,17 +31,25 @@ SUMMARY:
 
 #include <string.h>
 #include <NTL/tools.h>
-#include <NTL/vec_long.h>
 
 
 
 /* Declaration of sparse vector class.
  */
-#define NTL_svector_decl(T,vec_T,svec_T) \
+#define NTL_svector_decl(T,vec_T,svec_T,Ti,vec_Ti) \
 class svec_T { \
+public: \
+  /* Type of indices, elements and vectors. \
+   */ \
+  typedef Ti index_t; \
+  typedef vec_Ti vec_index_t; \
+  typedef T value_t; \
+  typedef vec_T vec_t; \
+  typedef svec_T svec_t; \
+ \
 protected: \
-  vec_long index; /* indices of allocated elements */ \
-  vec_T value;    /* values of allocated elements */ \
+  vec_index_t index; /* indices of allocated elements */ \
+  vec_t value;    /* values of allocated elements */ \
  \
   long len;       /* maximum value of index */ \
   bool len_fixed; /* is the length of this vector fixed? */ \
@@ -105,7 +113,7 @@ public: \
    * sure you maintain the sparsity of the vector, use the const version \
    * instead. \
    */ \
-  inline T& operator[](long i) { \
+  inline value_t& operator[](const index_t& i) { \
     NTLX_RANGE_CHECK_CODE; \
     return RawGet(i); \
   } \
@@ -115,22 +123,22 @@ public: \
    * allocated.  If the i'th vector element is not allocated, a const \
    * reference to zero will be returned. \
    */ \
-  inline const T& operator[](long i) const { \
+  inline const value_t& operator[](const index_t& i) const { \
     NTLX_RANGE_CHECK_CODE; \
     return RawGet(i); \
   } \
  \
   /* Indexing operation, starting from 1.  See operator[] for details. \
    */ \
-  inline T& operator()(long i) { \
-    --i; NTLX_RANGE_CHECK_CODE; \
+  inline value_t& operator()(const index_t& j) { \
+    index_t i; i=j; --i; NTLX_RANGE_CHECK_CODE; \
     return RawGet(i); \
   } \
  \
   /* Indexing operation, starting from 1.  See operator[] for details. \
    */ \
-  inline const T& operator()(long i) const { \
-    --i; NTLX_RANGE_CHECK_CODE; \
+  inline const value_t& operator()(const index_t& j) const { \
+    index_t i; i=j; --i; NTLX_RANGE_CHECK_CODE; \
     return RawGet(i); \
   } \
  \
@@ -139,13 +147,13 @@ public: \
   inline long nvalues() const { \
     return value.length(); \
   } \
-  inline const long* indices() const { \
+  inline const index_t* indices() const { \
     return index.elts(); \
   } \
-  inline T* values() { \
+  inline value_t* values() { \
     return value.elts(); \
   } \
-  inline const T* values() const { \
+  inline const value_t* values() const { \
     return value.elts(); \
   } \
  \
@@ -197,8 +205,8 @@ public: \
  \
   /* Indexing with no range checking.  See operator[] for details. \
    */ \
-  T& RawGet(long i); \
-  const T& RawGet(long i) const; \
+  value_t& RawGet(const index_t& i); \
+  const value_t& RawGet(const index_t& i) const; \
  \
   /* Returns position of a in the vector, or -1 if it is not there. \
    * The search is conducted from position 0 to MaxAlloc()-1 of the vector, \
@@ -207,14 +215,14 @@ public: \
    * Note that if NTL_CLEAN_PTR flag is set, this routine takes \
    * linear time, and otherwise, it takes constant time. \
    */ \
-  long position(const T& a) const; \
+  long position(const value_t& a) const; \
  \
   /* Returns position of a in the vector, or -1 if it is not there. \
    * The search is conducted from position 0 to length()-1 of the vector. \
    * Note that if NTL_CLEAN_PTR flag is set, this routine takes \
    * linear time, and otherwise, it takes constant time. \
    */ \
-  long position1(const T& a) const; \
+  long position1(const value_t& a) const; \
  \
   /* Eliminate zero values from vector to speed up read-only access. \
    */ \
@@ -234,7 +242,7 @@ public: \
   void swap(svec_T& other); \
 };\
  \
-long IsZero(const svec_T &x); \
+bool IsZero(const svec_T &x); \
  \
 inline void clear(svec_T &x) { \
   x.clear(); \
@@ -394,7 +402,7 @@ svec_T::svec_T(const svec_T& a, bool compact) { \
     index.SetLength(nvals); \
     value.SetLength(nvals); \
     if (nvals>0) { \
-      long* ind = index.elts(); \
+      index_t* ind = index.elts(); \
       T* val = value.elts(); \
       for (long i=0,j=0; i<a.value.length(); ++i)  \
 	if (!IsZero(a.value.RawGet(i))) { \
@@ -433,7 +441,7 @@ void svec_T::SetLength(long n) { \
   value.SetLength(index.length()); \
 } \
   \
-T& svec_T::RawGet(long i) { \
+T& svec_T::RawGet(const index_t& i) { \
   long nvals = index.length(); \
   long low = 0; \
   if (nvals>0) { \
@@ -459,7 +467,7 @@ T& svec_T::RawGet(long i) { \
   /* insert new value at position low */ \
   index.SetLength(nvals+1); \
   value.SetLength(nvals+1); \
-  ::clear(value.RawGet(nvals)); \
+  NTL_NNS clear(value.RawGet(nvals)); \
   if (low<nvals) { \
     memmove(index.elts()+low+1,index.elts()+low,(nvals-low)*sizeof(long)); \
     for (long j=nvals; j>low; --j) /* swap is faster than assignment */ \
@@ -469,7 +477,7 @@ T& svec_T::RawGet(long i) { \
   return value.RawGet(low); \
 } \
  \
-const T& svec_T::RawGet(long i) const { \
+const T& svec_T::RawGet(const index_t& i) const { \
   /* binary search */ \
   long low = 0; \
   long high = index.length(); \
@@ -524,7 +532,7 @@ long svec_T::position1(const T& a) const { \
 } \
  \
 void svec_T::compact() { \
-  long* ind = index.elts(); \
+  index_t* ind = index.elts(); \
   T* val = value.elts(); \
   /* this could be sped up by using swap(T,T) instead of T::operator=() */ \
   for (long i=value.length()-1; i>=0; --i) \
@@ -559,7 +567,7 @@ void svec_T::swap(svec_T& a) { \
   ::swap(value,a.value); \
 } \
  \
-long IsZero(const svec_T &x) { \
+bool IsZero(const svec_T &x) { \
   /* search for non-zero value */ \
   const T* v = x.values(); \
   for (long i=x.nvalues()-1; i>=0; --i) \
@@ -573,10 +581,10 @@ void VectorCopy(svec_T& x, const svec_T& a, long n) { \
   if (n>=(1L<<(NTL_BITS_PER_LONG-2))) Error("overflow in VectorCopy"); \
  \
   x.SetLength(n); \
-  clear(x); \
+  NTL_NNS clear(x); \
  \
   long an = a.nvalues(); \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
  \
   for (long i=0; (i<an)&&(ai[i]<n); ++i) \
@@ -586,16 +594,16 @@ void VectorCopy(svec_T& x, const svec_T& a, long n) { \
  \
 void conv(svec_T& dest, const vec_T& src) { \
   dest.SetLength(src.length()); \
-  clear(dest); \
+  NTL_NNS clear(dest); \
   for (long i=0; i<src.length(); ++i) \
     if (!IsZero(src[i])) \
       dest[i]=src[i]; \
 } \
 void conv(vec_T& dest, const svec_T& src) { \
   dest.SetLength(src.length()); \
-  clear(dest); \
+  NTL_NNS clear(dest); \
   long n = src.nvalues(); \
-  const long* si = src.indices(); \
+  const svec_T::index_t* si = src.indices(); \
   const T* sv = src.values(); \
   for (long i=0; i<n; ++i) \
     dest[si[i]] = sv[i]; \
@@ -603,13 +611,13 @@ void conv(vec_T& dest, const svec_T& src) { \
 
 
 // efficient processing of sparse array
-#define NTL_svector_impl_enum(T,a,b,a_only,b_only,a_b) \
+#define NTL_svector_impl_enum(T,Ti,a,b,a_only,b_only,a_b) \
   long an = a.nvalues(); \
-  const long* ai = a.indices(); \
+  const Ti* ai = a.indices(); \
   const T* av = a.values(); \
  \
   long bn = b.nvalues(); \
-  const long* bi = b.indices(); \
+  const Ti* bi = b.indices(); \
   const T* bv = b.values(); \
  \
   long aj=0; \
@@ -659,7 +667,7 @@ void conv(vec_T& dest, const svec_T& src) { \
 void mul(svec_T& x, const svec_T& a, const T& b) { \
   if (IsZero(b)) { \
     x.SetLength(a.length()); \
-    clear(x); \
+    NTL_NNS clear(x); \
     return; \
   } \
  \
@@ -674,9 +682,9 @@ void mul(svec_T& x, const svec_T& a, const T& b) { \
   else { \
     x.SetLength(a.length()); \
     x.SetAlloc(an); \
-    clear(x); \
+    NTL_NNS clear(x); \
  \
-    const long* ai = a.indices(); \
+    const svec_T::index_t* ai = a.indices(); \
     const T* av = a.values(); \
     for (long i=0; i<an; ++i) \
       if (!IsZero(av[i])) \
@@ -687,7 +695,7 @@ void mul(svec_T& x, const svec_T& a, const T& b) { \
 void mul(svec_T& x, const T& b, const svec_T& a) { \
   if (IsZero(b)) { \
     x.SetLength(a.length()); \
-    clear(x); \
+    NTL_NNS clear(x); \
     return; \
   } \
  \
@@ -702,9 +710,9 @@ void mul(svec_T& x, const T& b, const svec_T& a) { \
   else { \
     x.SetLength(a.length()); \
     x.SetAlloc(an); \
-    clear(x); \
+    NTL_NNS clear(x); \
  \
-    const long* ai = a.indices(); \
+    const svec_T::index_t* ai = a.indices(); \
     const T* av = a.values(); \
     for (long i=0; i<an; ++i) \
       if (!IsZero(av[i])) \
@@ -717,18 +725,18 @@ void InnerProduct(T& x, const svec_T& a, const svec_T& b) { \
     Error("svector InnerProduct: dimension mismatch"); \
  \
   long an = a.nvalues(); \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
  \
   long bn = b.nvalues(); \
-  const long* bi = b.indices(); \
+  const svec_T::index_t* bi = b.indices(); \
   const T* bv = b.values(); \
  \
   long aj=0; \
   long bj=0; \
  \
   T p; \
-  clear(x); \
+  NTL_NNS clear(x); \
  \
   while ((aj<an)&&(bj<bn)) { \
     if (ai[aj]<bi[bj]) \
@@ -748,7 +756,7 @@ void add(svec_T& x, const svec_T& a, const svec_T& b) { \
  \
   if (&x==&a) { \
     /* x+=b */ \
-    const long* bi = b.indices(); \
+    const svec_T::index_t* bi = b.indices(); \
     const T* bv = b.values(); \
     long bn = b.nvalues(); \
     /* worst case complexity: O(bn*xn), we could do: O(bn+xn) */ \
@@ -761,7 +769,7 @@ void add(svec_T& x, const svec_T& a, const svec_T& b) { \
  \
   else if (&x==&b) { \
     /* x+=a */ \
-    const long* ai = a.indices(); \
+    const svec_T::index_t* ai = a.indices(); \
     const T* av = a.values(); \
     long an = a.nvalues(); \
     /* worst case complexity: O(an*xn), we could do: O(an+xn) */ \
@@ -775,10 +783,10 @@ void add(svec_T& x, const svec_T& a, const svec_T& b) { \
   else { \
     x.SetLength(a.length()); \
     x.SetAlloc(max(a.nvalues(),b.nvalues())); \
-    clear(x); \
+    NTL_NNS clear(x); \
  \
     /* worst case complexity: O(an+bn) */ \
-    NTL_svector_impl_enum(T,a,b, \
+    NTL_svector_impl_enum(T,svec_T::index_t,a,b, \
 			  x[ai[aj]]=av[aj], \
 			  x[bi[bj]]=bv[bj], \
                           add(x[ai[aj]],av[aj],bv[bj])); \
@@ -791,7 +799,7 @@ void sub(svec_T& x, const svec_T& a, const svec_T& b) { \
  \
   if (&x==&a) { \
     /* x-=b */ \
-    const long* bi = b.indices(); \
+    const svec_T::index_t* bi = b.indices(); \
     const T* bv = b.values(); \
     long bn = b.nvalues(); \
     /* worst case complexity: O(bn*xn), we could do: O(bn+xn) */ \
@@ -804,7 +812,7 @@ void sub(svec_T& x, const svec_T& a, const svec_T& b) { \
  \
   else if (&x==&b) { \
     /* x-=a */ \
-    const long* ai = a.indices(); \
+    const svec_T::index_t* ai = a.indices(); \
     const T* av = a.values(); \
     long an = a.nvalues(); \
     /* worst case complexity: O(an*xn), we could do: O(an+xn) */ \
@@ -818,10 +826,10 @@ void sub(svec_T& x, const svec_T& a, const svec_T& b) { \
   else { \
     x.SetLength(a.length()); \
     x.SetAlloc(max(a.nvalues(),b.nvalues())); \
-    clear(x); \
+    NTL_NNS clear(x); \
  \
     /* worst case complexity: O(an+bn) */ \
-    NTL_svector_impl_enum(T,a,b, \
+    NTL_svector_impl_enum(T,svec_T::index_t,a,b, \
 			  x[ai[aj]]=av[aj], \
 			  negate(x[bi[bj]],bv[bj]), \
                           sub(x[ai[aj]],av[aj],bv[bj])); \
@@ -840,9 +848,9 @@ void negate(svec_T& x, const svec_T& a) { \
   else { \
     x.SetLength(a.length()); \
     x.SetAlloc(an); \
-    clear(x); \
+    NTL_NNS clear(x); \
  \
-    const long* ai = a.indices(); \
+    const svec_T::index_t* ai = a.indices(); \
     const T* av = a.values(); \
     for (long i=0; i<an; ++i) \
       if (!IsZero(av[i])) \
@@ -852,9 +860,9 @@ void negate(svec_T& x, const svec_T& a) { \
  \
 void mul(vec_T& x, const svec_T& a, const T& b) { \
   x.SetLength(a.length()); \
-  clear(x); \
+  NTL_NNS clear(x); \
   long an = a.nvalues(); \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
   for (long i=0; i<an; ++i) \
     mul(x[ai[i]],av[i],b); \
@@ -862,9 +870,9 @@ void mul(vec_T& x, const svec_T& a, const T& b) { \
  \
 void mul(vec_T& x, const T& b, const svec_T& a) { \
   x.SetLength(a.length()); \
-  clear(x); \
+  NTL_NNS clear(x); \
   long an = a.nvalues(); \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
   for (long i=0; i<an; ++i) \
     mul(x[ai[i]],b,av[i]); \
@@ -875,11 +883,11 @@ void InnerProduct(T& x, const vec_T& a, const svec_T& b) { \
     Error("InnerProduct() vector length mismatch"); \
  \
   long bn = b.nvalues(); \
-  const long* bi = b.indices(); \
+  const svec_T::index_t* bi = b.indices(); \
   const T* bv = b.values(); \
  \
   T p; \
-  clear(x); \
+  NTL_NNS clear(x); \
  \
   for (long i=0; i<bn; ++i) { \
     mul(p,a[bi[i]],bv[i]); \
@@ -892,11 +900,11 @@ void InnerProduct(T& x, const svec_T& b, const vec_T& a) { \
     Error("svector InnerProduct: dimension mismatch"); \
  \
   long bn = b.nvalues(); \
-  const long* bi = b.indices(); \
+  const svec_T::index_t* bi = b.indices(); \
   const T* bv = b.values(); \
  \
   T p; \
-  clear(x); \
+  NTL_NNS clear(x); \
  \
   for (long i=0; i<bn; ++i) { \
     mul(p,bv[i],a[bi[i]]); \
@@ -912,7 +920,7 @@ void add(vec_T& x, const vec_T& a, const svec_T& b) { \
     x=a; \
  \
   /* x+=b */ \
-  const long* bi = b.indices(); \
+  const svec_T::index_t* bi = b.indices(); \
   const T* bv = b.values(); \
   long bn = b.nvalues(); \
   for (long i=0; i<bn; ++i) { \
@@ -929,7 +937,7 @@ void add(vec_T& x, const svec_T& a, const vec_T& b) { \
     x=b; \
  \
   /* x+=a */ \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
   long an = a.nvalues(); \
   for (long i=0; i<an; ++i) { \
@@ -946,7 +954,7 @@ void sub(vec_T& x, const vec_T& a, const svec_T& b) { \
     x=a; \
  \
   /* x-=b */ \
-  const long* bi = b.indices(); \
+  const svec_T::index_t* bi = b.indices(); \
   const T* bv = b.values(); \
   long bn = b.nvalues(); \
   for (long i=0; i<bn; ++i) { \
@@ -963,7 +971,7 @@ void sub(vec_T& x, const svec_T& a, const vec_T& b) { \
     x=b; \
  \
   /* x-=a */ \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
   long an = a.nvalues(); \
   for (long i=0; i<an; ++i) { \
@@ -974,9 +982,9 @@ void sub(vec_T& x, const svec_T& a, const vec_T& b) { \
  \
 void negate(vec_T& x, const svec_T& a) { \
   x.SetLength(a.length()); \
-  clear(x); \
+  NTL_NNS clear(x); \
   long an = a.nvalues(); \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
   for (long i=0; i<an; ++i) \
     negate(x[ai[i]],av[i]); \
@@ -988,7 +996,7 @@ long operator==(const svec_T& a, const svec_T& b) { \
   if (a.length()!=b.length()) \
     return false; \
  \
-  NTL_svector_impl_enum(T,a,b, \
+  NTL_svector_impl_enum(T,svec_T::index_t,a,b, \
 	                if (!IsZero(av[aj])) return false, \
 			if (!IsZero(bv[bj])) return false, \
                         if (!(av[aj]==bv[bj])) return false); \
@@ -1007,7 +1015,7 @@ NTL_SNS istream & operator>>(NTL_SNS istream& in, svec_T& a) { \
     if (!in || !SkipWhiteSpace(in)) NTL_NNS Error("bad vector input"); \
     svec_T ibuf; \
     do { \
-      long index; \
+      svec_T::index_t index; \
       T elem; \
       if (!(in>>index)) NTL_NNS Error("bad vector input"); \
       if (!SkipWhiteSpace(in)) NTL_NNS Error("bad vector input"); \
@@ -1060,7 +1068,7 @@ NTL_SNS istream & operator>>(NTL_SNS istream& in, svec_T& a) { \
   \
 NTL_SNS ostream& operator<<(NTL_SNS ostream& out, const svec_T& a) { \
   long an = a.nvalues(); \
-  const long* ai = a.indices(); \
+  const svec_T::index_t* ai = a.indices(); \
   const T* av = a.values(); \
   out << '<'; \
   for (long i=0; i<an; ++i) \

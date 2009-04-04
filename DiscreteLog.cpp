@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <time.h>
 
 #include "DiscreteLog.h"
@@ -9,6 +8,8 @@
  * Written by: Chris Studholme
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
+
+NTL_START_IMPL;
 
 
 /**************** class DiscreteLog ****************/
@@ -202,7 +203,7 @@ ZZ DLog_Pollard::log(const GroupElement& power) {
   for (long i=factors.length()-1; i>=0; --i) {
     const pair_ZZ_long& factor = factors[i];
     ZZ d; 
-    ::power(d,factor.a,factor.b);
+    NTL::power(d,factor.a,factor.b);
     ZZ s;
     s = size/d;
     GroupElement* bs = group.newElementCopy(*base);
@@ -230,4 +231,5 @@ ZZ DLog_Pollard::log(const GroupElement& power) {
 }
 
 
+NTL_END_IMPL;
 

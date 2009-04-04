@@ -1,32 +1,27 @@
 CC		= gcc
-CPP		= g++
+CXX		= g++
 LINK		= g++
 
 NTLPREFIX	= /usr/local
 NTLLIB		= -L$(NTLPREFIX)/lib -lntl -lgmp
 NTLINCLUDE	= -I$(NTLPREFIX)/include
 
-PREFFLAGS	=
-CPPFLAGS	= $(PREFFLAGS) -O2 -Wall -Wno-deprecated $(NTLINCLUDE) -I.
+PREFFLAGS	= -O2 -Wall -I.
+CXXFLAGS	= $(PREFFLAGS) $(NTLINCLUDE)
 LINKFLAGS	= $(NTLLIB)
 
 ALL_PROGS	= dlog-test
 COMMON_OBJS	= pair_ZZ_long.o ZZFactoring.o \
 		  mat_long.o svector.o smatrix.o \
-		  FactorBase.o AlgebraicFactorBase.o \
-		  DiscreteLog.o IndexCalculus.o NumberFieldSieve.o
+		  vector.o FactorBase.o AlgebraicFactorBase.o \
+		  SGauss.o DiscreteLog.o IndexCalculus.o \
+		  NumberFieldSieve.o
 COMMON_HEADERS	=
-
-
-.SUFFIXES: .cpp .o
-
-.cpp.o:
-	$(CPP) -c $(CPPFLAGS) $*.cpp
 
 
 all:	$(ALL_PROGS)
 
-dlog-test:	dlog-test.o $(COMMON_OBJS)
+dlog-test:	$(COMMON_OBJS) dlog-test.o
 	$(LINK) -o $@ $^ $(LINKFLAGS)
 
 clean:

@@ -5,10 +5,14 @@
 #include <NTL/vec_vec_long.h>
 #include <NTL/matrix.h>
 
+NTL_OPEN_NNS;
+
 NTL_matrix_decl(long,vec_long,vec_vec_long,mat_long);
 NTL_eq_matrix_decl(long,vec_long,vec_vec_long,mat_long);
 NTL_io_matrix_decl(long,vec_long,vec_vec_long,mat_long);
 
 void clear(mat_long& A);
+
+NTL_CLOSE_NNS;
 
 #endif

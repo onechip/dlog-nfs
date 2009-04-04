@@ -9,6 +9,7 @@
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
 
+NTL_START_IMPL;
 
 static const long ntlx_svec_long_zero=0;
 
@@ -55,3 +56,5 @@ NTL_svector_impl(ZZ_p,vec_ZZ_p,svec_ZZ_p,ZZ_p::zero());
 NTL_math_svector_impl(ZZ_p,vec_ZZ_p,svec_ZZ_p);
 NTL_eq_svector_impl(ZZ_p,svec_ZZ_p);
 NTL_io_svector_impl(ZZ_p,svec_ZZ_p);
+
+NTL_END_IMPL;

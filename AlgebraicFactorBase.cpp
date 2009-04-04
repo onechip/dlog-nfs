@@ -1,4 +1,3 @@
-#include <stdio.h>
 
 #include <NTL/ZZ_pE.h>
 #include <NTL/ZZ_pXFactoring.h>
@@ -13,6 +12,8 @@
  * Written by: Chris Studholme
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
+
+NTL_START_IMPL;
 
 AlgebraicFactorBase::AlgebraicFactorBase(const ZZX& _f, long bound) {
   f = _f;
@@ -251,4 +252,5 @@ void AlgebraicFactorBase::CharacterMap(ZZ* l, long c, long d) const {
   }
 }
   
+NTL_END_IMPL;
 

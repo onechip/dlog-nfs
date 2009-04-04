@@ -1,6 +1,8 @@
 #ifndef _INDEXCALCULUS_H_
 #define _INDEXCALCULUS_H_
 
+#include <iostream>
+
 #include <NTL/ZZ.h>
 #include <NTL/ZZ_p.h>
 #include <NTL/vec_long.h>
@@ -11,6 +13,8 @@
 #include "DiscreteLog.h"
 #include "FactorBase.h"
 
+
+NTL_OPEN_NNS;
 
 /* Base class for methods of computing discrete logarithms based on the
  * Index Calculus method.  These include the classic Index Calculus method
@@ -71,8 +75,9 @@ public:
 
   // returns -1 if the discrete log does not exist
   ZZ log(const GroupElement& power) {
-    cerr<<"DLog_IC_Base::log() "<<
-      "cannot use index calculus method with an arbitrary group\n";
+    std::cerr<<"DLog_IC_Base::log() "
+	     <<"cannot use index calculus method with an arbitrary group"
+	     <<std::endl;
     return to_ZZ(-1);
   }
 
@@ -164,11 +169,12 @@ private:
 
   // L_p[1/2;c] = exp(c*sqrt(log(p)*log(log(p))))
   inline static double L_p(const ZZ& p, double c) {
-    double lm = ::log(p);
+    double lm = NTL::log(p);
     double llm = ::log(lm);
     return exp(c*sqrt(lm*llm));
   }
 };
 
+NTL_CLOSE_NNS;
 
 #endif

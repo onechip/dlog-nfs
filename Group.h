@@ -4,6 +4,8 @@
 #include <NTL/ZZ.h>
 #include <NTL/ZZ_p.h>
 
+NTL_OPEN_NNS;
+
 /* Group and GroupElement abstract interfaces to a general group.
  * GroupElement represents an individual element of a general group
  * and supports tests for identity and equality, transformation to
@@ -20,6 +22,8 @@
  */
 class GroupElement {
 public:
+  virtual ~GroupElement() {}
+
   // test if this element is the identity
   virtual bool isIdentity() const=0;
 
@@ -61,6 +65,8 @@ public:
  */
 class Group {
 public:
+  virtual ~Group() {}
+
   // create new group element that is identity
   virtual GroupElement* newElementIdentity()=0;
 
@@ -116,12 +122,12 @@ public:
 
   // set this to this ^ exponent
   virtual void power(const ZZ& exponent) {
-    ::power(value,value,exponent);
+    NTL::power(value,value,exponent);
   }
  
   // set this to this ^ exponent
   virtual void power(long exponent) {
-    ::power(value,value,exponent);
+    NTL::power(value,value,exponent);
   }
 
   // invert this group element
@@ -185,5 +191,7 @@ public:
   }
 
 };
+
+NTL_CLOSE_NNS;
 
 #endif

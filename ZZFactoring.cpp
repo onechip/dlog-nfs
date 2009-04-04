@@ -1,4 +1,3 @@
-#include <stdio.h>
 
 #include <NTL/ZZ_p.h>
 #include "ZZFactoring.h"
@@ -10,6 +9,7 @@
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
 
+NTL_START_IMPL;
 
 
 long ProvePrime(const ZZ& _n) {
@@ -194,3 +194,4 @@ void factor(vec_pair_ZZ_long& factors, const ZZ& _n,
 }
 
 
+NTL_END_IMPL;

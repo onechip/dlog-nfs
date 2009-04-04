@@ -1,4 +1,3 @@
-#include <stdio.h>
 
 #include "mat_long.h"
 
@@ -7,6 +6,8 @@
  * Written by: Chris Studholme
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
+
+NTL_START_IMPL;
 
 NTL_matrix_impl(long,vec_long,vec_vec_long,mat_long);
 
@@ -24,3 +25,4 @@ void clear(mat_long& A) {
     clear(A[i]);
 }
 
+NTL_END_IMPL;

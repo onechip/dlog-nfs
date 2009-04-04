@@ -1,0 +1,7 @@
+
+New in v1.1
++ fixed namespace related compile problems
++ sparse vector now has parameter for index type (still long for now)
++ improved linear sieve methods
++ formal structured gaussian elimination method
+  - IndexCalculus class still does its SGE too (should be fixed someday)

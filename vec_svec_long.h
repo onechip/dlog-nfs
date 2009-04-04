@@ -4,9 +4,12 @@
 #include <NTL/vector.h>
 #include "svec_long.h"
 
+NTL_OPEN_NNS;
+
 NTL_vector_decl(svec_long,vec_svec_long);
 NTL_eq_vector_decl(svec_long,vec_svec_long);
 NTL_io_vector_decl(svec_long,vec_svec_long);
 
+NTL_CLOSE_NNS;
 
 #endif

@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include <iostream>
+
 #include <string.h>
 
 #include <NTL/vec_long.h>
@@ -20,6 +21,7 @@
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
 
+NTL_START_IMPL;
 
 #define IC_INITIAL_CACHE_SIZE 16
 
@@ -27,6 +29,9 @@
 // proper optimization
 //#define IC_EXTRA_SIEVING
 
+inline void clear(vec_long& x) {
+  memset(x.elts(),0,x.length()*sizeof(long));
+}
 
 /**************** class DLog_IC_Base ****************/
 
@@ -745,7 +750,7 @@ bool IndexCalculus::make_system() {
   IC_Relations rels(zfb,H);
   long nprimes = zfb.length();
   long* fact = new long[zfb.length()];
-  vec_long sieve;
+  vec_short sieve;
   sieve.SetMaxLength(sieve_length);
 
   if (VERBOSE)
@@ -756,6 +761,9 @@ bool IndexCalculus::make_system() {
   long sieve_total=0;
   long sieve_smooth=0;
   long sieve_bad=0;
+
+  // sieve comparison
+  double sieve_time=0;
 
   ZZ res;  // residule
   ZZX f;   // polynomial to sieve over
@@ -768,10 +776,13 @@ bool IndexCalculus::make_system() {
     rem(res,H*(H+d),p);
     SetCoeff(f,0,res);
     SetCoeff(f,1,H+d);
+
     sieve.SetLength(d+1);
-    for (long c=0; c<sieve.length(); ++c)
-      sieve[c]=0;
+    clear(sieve);
+    double t_start = GetTime();
     zfb.sieve(sieve,f);
+    sieve_time += GetTime()-t_start;
+
     ++sieve_count;
     sieve_total+=sieve.length();
     
@@ -805,49 +816,8 @@ bool IndexCalculus::make_system() {
   }
   cout<<"\n";
 
-  /*
-  for (long c=0; (c<sieve_length)&&(!done); ++c) {
-    rem(res,(H+c)*(H+c),p);
-    SetCoeff(f,0,res);
-    SetCoeff(f,1,H+c);
-    sieve.SetLength(sieve_length-c);
-    for (long i=0; i<sieve_length-c; ++i)
-      sieve[i]=0;
-    zfb.sieve(sieve,f);
-    ++sieve_count;
-    sieve_total+=(sieve_length-c);
-
-    for (long i=0; i<sieve_length-c; ++i) {
-      if (sieve[i]==1) {
-	rem(res,(H+c)*(H+c+i),p);
-	if (!zfb.factor(fact,res)) {
-	  ++sieve_bad;
-	  continue;
-	}
-	++sieve_smooth;
-	rels.add(fact,c,c+i);
-      }
-    }
-    
-    done=rels.done();
-
-    long percent = 100 - (nprimes+rels.nmedium-rels.nrels)*100/nprimes;
-    if ((percent!=last_percent)||(sieve_count-last_count>=10)) {
-      cout<<"Sieving: "
-	  <<sieve_count<<" sieves, "
-	  <<sieve_smooth<<"/"<<sieve_total<<" smooth, "
-	  <<rels.nrels<<"/"<<(nprimes+rels.nmedium)<<" needed";
-      if (percent<100)
-	cout<<" ("<<percent<<"%)  \r";
-      else
-	cout<<"        \r";
-      cout.flush();
-      last_percent=percent;
-      last_count=sieve_count;
-    }
-  }
-  cout<<"\n";
-  */
+  //sieve1_times();
+  //std::cout<<"sieve1: "<<sieve_time<<" seconds"<<std::endl;
 
   delete[] fact;
 
@@ -1098,7 +1068,7 @@ ZZ IndexCalculus::log_prime(const ZZ& pw) {
   // variables used below
   ZZ logy,logn;
   ZZ_p y,n;
-  vec_long sieve;
+  vec_short sieve;
   ZZX f;
 
   // iterate through values of y
@@ -1141,3 +1111,4 @@ ZZ IndexCalculus::log_prime(const ZZ& pw) {
 }
 
 
+NTL_END_IMPL;

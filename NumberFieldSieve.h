@@ -9,6 +9,8 @@
 #include "IndexCalculus.h"
 #include "FactorBase.h"
 
+NTL_OPEN_NNS;
+
 // helper class defined internally
 class NFS_Relations;
 
@@ -79,7 +81,7 @@ private:
 
   // L_p[1/3;c] = exp(c*log(p)^{1/3}*log(log(p))^{2/3})
   inline static double L_p(const ZZ& p, double c) {
-    double lm = ::log(p);
+    double lm = NTL::log(p);
     double llm = ::log(lm);
     double lllm = ::log(llm);
     return exp(c*exp(llm/3)*exp(lllm*2/3));
@@ -87,5 +89,7 @@ private:
 
 
 };
+
+NTL_CLOSE_NNS;
 
 #endif

@@ -15,11 +15,20 @@
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
 
+NTL_START_IMPL;
+
 // create a file named 'nfs.data' showing the distribution of smooth integers
 //#define NFS_CREATE_DIST_FILE
 
 long DLog_NFS::MAX_SIEVE=20000000;  /* maximum size of a single sieve */
 
+
+inline long rem(long a, long b) {
+  long r = a%b;
+  while (r<0)
+    r+=b;
+  return r;
+}
 
 // compute fg = f(g(X))
 inline void compose(ZZX& fg, const ZZX& f, const ZZX& g) {
@@ -78,7 +87,7 @@ public:
 
   // figure out if we have enough relations to solve the linear system
   bool done() {
-    long extra = (long)log(k+afb.length()+zfb.length());
+    long extra = (long)log((double)(k+afb.length()+zfb.length()));
     return (rels.length()>k+afb.length()+zfb.length()+extra);
   }
 
@@ -360,7 +369,7 @@ void DLog_NFS::setBase(const ZZ_p& base, long _k, long bound,
   cout<<"DLog_NFS::setBase() lower smoothness bound is "<<bound<<"\n";
 
   // set upper bound (k'th root of p)
-  conv(upper_bound,exp(::log(p)/k));
+  conv(upper_bound,exp(NTL::log(p)/k));
   if (VERBOSE)
     cout<<"DLog_NFS::setBase() upper smoothness bound is "<<upper_bound<<"\n";
 
@@ -480,7 +489,7 @@ ZZ DLog_NFS::log_prime(const ZZ& _mp) {
   ZZ m;
   mul(m,mp,2);
   ZZ pk;
-  conv(pk,exp(::log(p)/k));
+  conv(pk,exp(NTL::log(p)/k));
   //cout<<"DLog_NFS::log_prime() pk = "<<pk<<"\n";
   while (m<=pk) {
     m*=2;
@@ -575,10 +584,10 @@ ZZ DLog_NFS::log_prime(const ZZ& _mp) {
     --sieve_width;
 
   cout<<"DLog_NFS::log_prime() c in range [-"
-      <<(sieve_width/2)<<","<<(sieve_width/2)<<"]  \n";
+      <<(sieve_width/2)<<","<<(sieve_width/2)<<"]  "<<endl;
 
   // the sieve
-  vec_long sieve;
+  vec_short sieve;
   sieve.SetLength(sieve_width);
 
   // sieve stats
@@ -625,37 +634,65 @@ ZZ DLog_NFS::log_prime(const ZZ& _mp) {
 
     // skip even c's if d is even
     if ((d%2)==0) {
+      // fz = 2x+1
       SetCoeff(fz,0,1);
       SetCoeff(fz,1,2);
       ZZX _fs(fs);
       compose(fs,_fs,fz);
     }
 
+    // remove any common smooth factor from coefficients
+    zfb.reduce(fs,fs);
+
     // start of sieve
     long start=-(sieve_width/2);
 
-    // initialize sieve to indicate which values of c we are interested in
-    if ((d%2)==1) {
-      for (long i=0; i<sieve_width; ++i) {
-	if ((start+i!=0)&&(GCD(start+i,d)==1))
-	  sieve[i] = 0;
-	else
-	  sieve[i] = -1;
+    // initialize sieve to indicate which values of c we're interested in
+    vec_pair_long_long excludes;
+    clear(sieve);
+    if (d>2) {
+      long rm;
+      zfb.factor(zfact,rm,d);
+      for (long i=1; i<zfb.length(); ++i) {  // ignore p=2
+        if (zfact[i]>0) {
+          // remove prime
+          long p = zfb[i];
+          if ((d%2)==1) {
+            // start+i = 0 mod p  =>  i = -start mod p;
+            for (long i=rem(-start,p); i<sieve_width; i+=p)
+              sieve[i] = -1;
+            append(excludes,p,0);
+          }
+          else {
+            // 2*(start+i)+1 = 0 mod p  =>   i = -1/2 - start mod p
+            for (long i=rem(-InvMod(2,p)-start,p); i<sieve_width; i+=p)
+              sieve[i] = -1;
+            // 2x+1 = 0 mod p  =>  x = -1/2 mod p
+            append(excludes,p,InvMod(p-2,p));
+          }
+        }
+      }
+      if (rm>1) {
+        if ((d%2)==1) {
+          sieve[-start] = -1;
+          for (long i=0; i<sieve_width; ++i)
+            if (GCD(start+i,rm)!=1)
+              sieve[i] = -1;
+        }
+        else {
+          for (long i=0; i<sieve_width; ++i)
+            if (GCD(2*(start+i)+1,rm)!=1)
+              sieve[i] = -1;
+        }
       }
     }
-    else {
-      for (long i=0; i<sieve_width; ++i) {
-	if (GCD(2*(start+i)+1,d)==1)
-	  sieve[i] = 0;
-	else
-	  sieve[i] = -1;
-      }
-    }
+    else
+      sieve[-start] = -1;
 
     // sieve for smooth c+d*m and c+d*alpha
-    zfb.sieve(sieve,fs,to_ZZ(start));
+    zfb.sieve(sieve,fs,to_ZZ(start),ZZ::zero(),0,0,excludes);
     ++sieve_count;      
-    
+
     // check results
     for (long i=0; i<sieve_width; ++i) {
       if (sieve[i]==1) {
@@ -665,21 +702,21 @@ ZZ DLog_NFS::log_prime(const ZZ& _mp) {
 	  c = start+i;
 	else
 	  c = 2*(start+i)+1;
-	
+
 	// smooth integer
 	if (!zfb.factor(zfact,c+d*m)) {
 	  cerr<<"DLog_NFS::log_prime() WARNING: bad smooth rational  \n";
 	  ++sieve_bad;
 	  continue;
 	}
-	
+
 	// smooth algebraic integer
 	if (!afb.factor(afact,c,d)) {
 	  cerr<<"DLog_NFS::log_prime() WARNING: bad smooth algebraic  \n";
 	  ++sieve_bad;
 	  continue;
 	}
-	
+
 	// character map
 	afb.CharacterMap(l,c,d);
 	
@@ -785,3 +822,4 @@ ZZ DLog_NFS::log_prime(const ZZ& _mp) {
 }
 
 
+NTL_END_IMPL;

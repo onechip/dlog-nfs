@@ -2,13 +2,33 @@
 #define _FACTORBASE_H_
 
 #include <NTL/ZZX.h>
+#include <NTL/pair.h>
+#include <NTL/vector.h>
 #include <NTL/vec_vec_long.h>
+#include "vec_short.h"
+
 
 /* Class representing a factor base.
  *
  * Written by: Chris Studholme
  * Copyright:  GPL (http://www.fsf.org/copyleft/gpl.html)
  */
+
+NTL_OPEN_NNS;
+
+NTL_pair_decl(long,long,pair_long_long);
+NTL_pair_io_decl(long,long,pair_long_long);
+NTL_pair_eq_decl(long,long,pair_long_long);
+
+NTL_vector_decl(pair_long_long,vec_pair_long_long);
+NTL_io_vector_decl(pair_long_long,vec_pair_long_long);
+NTL_eq_vector_decl(pair_long_long,vec_pair_long_long);
+
+inline void append(vec_pair_long_long& x, long a, long b) {
+  append(x,cons(a,b));
+}
+
+//void sieve1_times();
 
 class FactorBase {
 private:
@@ -19,6 +39,12 @@ private:
                  //   primes[sprime] > sqrt(primes[nprimes-1])
   
 public:
+
+  /* Set to half L2 cache size to optimize sieve.  Setting to 0 disables
+   * cache optimization.
+   */
+  static long CACHE_SIZE;
+
   /* Create empty factorbase.  Call setBound() to create usable factorbase.
    */
   FactorBase();
@@ -51,13 +77,29 @@ public:
    * entries in smooth with contain either: -1 for values that were not
    * checked, 1 for smooth images, and zero for non-smooth images.
    * In the case where f(a)=0, smooth[a-start]=0.
+   *
+   * New parameters:
+   *   rem_factor - maximum size of remaining factor (default 0)
+   *   bound_low  - start sieve at this prime (default: 2)
+   *   bound_high - end sieve at this prime (default: fb bound)
+   *   exclude    - pairs (p,r) where p prime and r mod p are domain values
+   *                  to avoid
    */
-  void sieve(vec_long& smooth, const ZZX& f, const ZZ& start=ZZ::zero()) const;
+  void sieve(vec_short& smooth, const ZZX& f, const ZZ& start=ZZ::zero(),
+	     const ZZ& rem_factor=ZZ::zero(),
+	     long bound_low=0, long bound_high=0,
+	     const vec_pair_long_long& exclude=vec_pair_long_long()) const;
+
 
   /* Sieve over a two variable polynomial (probabilistic).
    */
-  void sieve(vec_vec_long& smooth, const ZZX& f, 
-	     const ZZ& c_start=ZZ::zero(), const ZZ& d_start=ZZ::zero()) const;
+  //void sieve(vec_vec_long& smooth, const ZZX& f, 
+  //     const ZZ& c_start=ZZ::zero(), const ZZ& d_start=ZZ::zero()) const;
+
+  /* Reduce polynomial f by removing any smooth factor common to all
+   * coefficients.  Result is g.
+   */
+  void reduce(ZZX& g, const ZZX& f) const;
 
   /* Factor n using trial division and return true if n is smooth.  f is the
    * exponents in the factorization of n and is expected to be of size length.
@@ -66,6 +108,7 @@ public:
    * n, rem contains the non-smooth factor, and the method returns false.
    */
   bool factor(long* f, ZZ& rem, const ZZ& n) const;
+  bool factor(long* f, long& rem, long n) const;
 
   /* Factor n using trial division and return true if n is smooth.  f is the
    * exponents in the factorization of n and is expected to be of size length.
@@ -73,6 +116,10 @@ public:
    */
   inline bool factor(long* f, const ZZ& n) const {
     ZZ rem;
+    return factor(f,rem,n);
+  }
+  inline bool factor(long* f, long n) const {
+    long rem;
     return factor(f,rem,n);
   }
 
@@ -102,6 +149,14 @@ public:
     return primes[i];
   }
 
+  // find prime, returns -1 if not found
+  inline long find(long p) const {
+    for (long i=0; i<nprimes; ++i)
+      if (p==primes[i])
+	return i;
+    return -1;
+  }
+
   // read-only reference to the array of primes
   const long* getPrimes() const {
     return primes;
@@ -114,5 +169,7 @@ public:
 
 private:  
 };
+
+NTL_CLOSE_NNS;
 
 #endif
