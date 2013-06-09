@@ -29,7 +29,8 @@ SUMMARY:
 */
 
 
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <NTL/tools.h>
 
 
