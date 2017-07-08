@@ -2,13 +2,12 @@
 #define NTLX_vec_short__H
 
 #include <string.h>
+
 #include <NTL/vector.h>
 
 NTL_OPEN_NNS;
 
-NTL_vector_decl(short,vec_short);
-NTL_eq_vector_decl(short,vec_short);
-NTL_io_vector_decl(short,vec_short);
+typedef Vec<short> vec_short;
 
 inline void clear(vec_short& x) {
   memset(x.elts(),0,x.length()*sizeof(short));

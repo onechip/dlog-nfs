@@ -11,7 +11,7 @@ CXXFLAGS	= $(PREFFLAGS) $(NTLINCLUDE)
 LINKFLAGS	= $(NTLLIB)
 
 ALL_PROGS	= dlog-test
-COMMON_OBJS	= pair_ZZ_long.o ZZFactoring.o \
+COMMON_OBJS	= ZZFactoring.o \
 		  mat_long.o svector.o smatrix.o \
 		  vector.o FactorBase.o AlgebraicFactorBase.o \
 		  SGauss.o DiscreteLog.o IndexCalculus.o \

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "vec_long.h"
 #include <NTL/ZZXFactoring.h>
 #include "ZZFactoring.h"
 #include "smat_ZZ_p.h"

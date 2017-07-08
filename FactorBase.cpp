@@ -22,26 +22,11 @@
 
 NTL_START_IMPL;
 
-NTL_pair_impl(long,long,pair_long_long);
-NTL_pair_io_impl(long,long,pair_long_long);
-NTL_pair_eq_impl(long,long,pair_long_long);
-
-NTL_vector_impl(pair_long_long,vec_pair_long_long);
-NTL_io_vector_impl(pair_long_long,vec_pair_long_long);
-NTL_eq_vector_impl(pair_long_long,vec_pair_long_long);
-
 class sieve_run {
 public:
   long pi,e,start,inc;
 };
-
-NTL_vector_decl(sieve_run,vec_run);
-//NTL_io_vector_decl(sieve_run,vec_run);
-//NTL_eq_vector_decl(sieve_run,vec_run);
-
-NTL_vector_impl(sieve_run,vec_run);
-//NTL_io_vector_impl(sieve_run,vec_run);
-//NTL_eq_vector_impl(sieve_run,vec_run);
+typedef Vec<sieve_run> vec_run;
 
 inline void append(vec_run& plan, long pi, long e, long start, long inc) {
   plan.SetLength(plan.length()+1);
@@ -706,7 +691,7 @@ void FactorBase::sieve(vec_short& smooth, const ZZX& f, const ZZ& start,
     abs(t,t);
     if (max<t) max=t;
   }
-
+  
   // compute log multiplier and log of primes
   //double logmult = (NTL_MAX_LONG/2)/log(max);
   //double logmult = (1<<(8*sizeof(short)-2))/log(max);

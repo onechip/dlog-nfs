@@ -29,9 +29,6 @@ NTL_START_IMPL;
 // proper optimization
 //#define IC_EXTRA_SIEVING
 
-inline void clear(vec_long& x) {
-  memset(x.elts(),0,x.length()*sizeof(long));
-}
 
 /**************** class DLog_IC_Base ****************/
 

@@ -17,15 +17,6 @@ NTL_START_IMPL;
 
 static const bool SGAUSS_VERBOSE = false;
 
-template<class T>
-inline void swap(T& x, T& y) {
-  T z=x; x=y; y=z;
-}
-
-inline long IsZero(long i) {
-  return (i==0);
-}
-
 inline const ZZ_p& operator/=(ZZ_p& a, const NTL::ZZ& b) {
   a /= to_ZZ_p(b);
   return a;
@@ -46,8 +37,8 @@ inline void InnerProduct(ZZ_p& result, const svec_T& a, const vec_T& b) {
     exit(1);
   }
   clear(result);
-  const typename svec_T::index_t* ai = a.indices();
-  const typename svec_T::value_t* av = a.values();
+  const long* ai = a.indices();
+  const typename svec_T::value_type* av = a.values();
   for (long i=0; i<a.nvalues(); ++i)
     result += av[i]*b[ai[i]];
 }
@@ -59,8 +50,8 @@ void nonzero(svec_long& x, const svec_T& y) {
   x.SetLength(y.length());
   x.SetAlloc(y.nvalues());
   clear(x);
-  const typename svec_T::index_t* yi = y.indices();
-  const typename svec_T::value_t* yv = y.values();
+  const long* yi = y.indices();
+  const typename svec_T::value_type* yv = y.values();
   for (long j=0; j<y.nvalues(); ++j)
     if (!IsZero(yv[j]))
       x[yi[j]]=1;
@@ -152,8 +143,7 @@ public:
   // types
   //typedef smat_T smat_t;
   //typedef svec_T svec_t;
-  typedef typename svec_T::index_t index_t;
-  typedef typename svec_T::value_t value_t;
+  typedef typename svec_T::value_type value_t;
 
   // matrix and column representing system A * x = y
   smat_gauss(const smat_T& A, const vec_Tp& y);
@@ -258,7 +248,7 @@ smat_gauss<smat_T,svec_T,vec_Tp,Tp>::smat_gauss(const smat_T& A1,
   // scan matrix to generate Arw, AEc and AEcw
   bool row1 = false;
   for (long i=A.NumRows()-1; i>=0; --i) {
-    const index_t* ri = A[i].indices();
+    const long* ri = A[i].indices();
     const value_t* rv = A[i].values();
     for (long j=0; j<A[i].nvalues(); ++j)
       if (!IsZero(rv[j])) {
@@ -321,7 +311,7 @@ template <class smat_T, class svec_T, class vec_Tp, class Tp>
 void smat_gauss<smat_T,svec_T,vec_Tp,Tp>::eliminate_row1(long i) {
   set_row_weight(i,0);
   --nrows;
-  const index_t* ri = row(i).indices();
+  const long* ri = row(i).indices();
   const value_t* rv = row(i).values();
   for (long j=0; j<row(i).nvalues(); ++j) {
     long c = ri[j];
@@ -366,7 +356,7 @@ void smat_gauss<smat_T,svec_T,vec_Tp,Tp>::eliminate_col1(long c) {
       resort(c);
       set_row_weight(r,0);
       --nrows;
-      const index_t* ri = row(r).indices();
+      const long* ri = row(r).indices();
       const value_t* rv = row(r).values();
       for (long j=0; j<row(r).nvalues(); ++j) 
 	if (AEcw[ri[j]]>0 && !IsZero(rv[j])) {
@@ -407,8 +397,8 @@ void smat_gauss<smat_T,svec_T,vec_Tp,Tp>::eliminate_col2(long c) {
       Erw[r] = 0;
       svec_long rnz;
       nonzero(rnz,E[r]);
-      const svec_long::index_t* ri = rnz.indices();
-      const svec_long::value_t* rv = rnz.values();
+      const long* ri = rnz.indices();
+      const svec_long::value_type* rv = rnz.values();
       for (long k=0; k<rnz.nvalues(); ++k) {
 	if (rv[k]==1 && AEcw[ri[k]]>0) {
 	  append(AEc[ri[k]],-r-1);
@@ -444,7 +434,7 @@ void smat_gauss<smat_T,svec_T,vec_Tp,Tp>::eliminate_col2(long c) {
 
 template <class smat_T, class svec_T, class vec_Tp, class Tp>
 void smat_gauss<smat_T,svec_T,vec_Tp,Tp>::eliminate_row(long r) {
-  const index_t* ri = row(r).indices();
+  const long* ri = row(r).indices();
   const value_t* rv = row(r).values();
   for (long j=0; j<row(r).nvalues(); ++j) {
     long c = ri[j];
@@ -545,7 +535,7 @@ void smat_gauss<smat_T,svec_T,vec_Tp,Tp>::make_system(smat_T& newA,
   long r=0;
   for (long i=0; i<A.NumRows(); ++i) 
     if (Arw[i]>0) {
-      const index_t* ri = A[i].indices();
+      const long* ri = A[i].indices();
       const value_t* rv = A[i].values();
       for (long j=0; j<A[i].nvalues(); ++j)
 	if (!IsZero(rv[j]) && AEcw[ri[j]]>0)
@@ -555,7 +545,7 @@ void smat_gauss<smat_T,svec_T,vec_Tp,Tp>::make_system(smat_T& newA,
     }
   for (long i=0; i<E.NumRows(); ++i)
     if (Erw[i]>0) {
-      const index_t* ri = E[i].indices();
+      const long* ri = E[i].indices();
       const value_t* rv = E[i].values();
       for (long j=0; j<E[i].nvalues(); ++j)
 	if (!IsZero(rv[j]) && AEcw[ri[j]]>0)
@@ -597,7 +587,7 @@ bool smat_gauss<smat_T,svec_T,vec_Tp,Tp>::undo(vec_Tp& x,
 	// see if we have exactly one unknown value with non-zero coefficient
 	long unknown=-1;
 	long n = A[i].nvalues();
-	const index_t* aj = A[i].indices();
+	const long* aj = A[i].indices();
 	const value_t* av = A[i].values();
 	used[i]=true;
 	for (long j=0; j<n; ++j) 

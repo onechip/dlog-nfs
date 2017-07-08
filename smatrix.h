@@ -73,7 +73,7 @@ non-rectangular matrix will result in a run-time error.
 */
 
 
-#include <NTL/matrix.h>
+#include "ntl5_matrix.h"
 
 
 #define NTL_smatrix_decl(T,svec_T,vec_svec_T,smat_T) \
