@@ -6,7 +6,7 @@
 #include <NTL/vec_ZZ.h>
 #include "smat_ZZ.h"
 
-#include "IndexCalculus.h"
+#include "DLog_IC_Base.h"
 #include "FactorBase.h"
 
 NTL_OPEN_NNS;

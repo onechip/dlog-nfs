@@ -14,7 +14,7 @@ ALL_PROGS	= dlog-test
 COMMON_OBJS	= ZZFactoring.o \
 		  mat_long.o svector.o smatrix.o \
 		  vector.o FactorBase.o AlgebraicFactorBase.o \
-		  SGauss.o DiscreteLog.o IndexCalculus.o \
+		  SGauss.o DiscreteLog.o DLog_IC_Base.o \
 		  NumberFieldSieve.o
 COMMON_HEADERS	=
 

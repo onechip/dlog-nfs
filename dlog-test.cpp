@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "IndexCalculus.h"
 #include "NumberFieldSieve.h"
 
 using namespace NTL;
