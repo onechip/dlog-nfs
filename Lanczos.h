@@ -28,7 +28,7 @@ bool Lanczos(const smat_T& A, vec_T& x, const vec_T& y, \
   } \
  \
   if (nrows<ncols) { \
-    cerr<<"Lanczos() insufficient rows\n"; \
+    std::cerr<<"Lanczos() insufficient rows"<<std::endl; \
     return false; \
   } \
  \
@@ -77,7 +77,7 @@ bool Lanczos(const smat_T& A, vec_T& x, const vec_T& y, \
    \
   /* check if dvw is zero */ \
   if (IsZero(dvw)) { \
-    cerr<<"Lanczos() (w0,v1)=0\n"; \
+    std::cerr<<"Lanczos() (w0,v1)=0"<<std::endl; \
     return false; \
   } \
  \
@@ -117,8 +117,7 @@ bool Lanczos(const smat_T& A, vec_T& x, const vec_T& y, \
  \
     long percent = (++count)*100 / nrows; \
     if ((percent!=last_percent)&&(count-last_count>=20)) { \
-      cout<<"Lanczos: "<<count<<" itterations ("<<percent<<"%)  \r"; \
-      cout.flush(); \
+      std::cout<<"Lanczos: "<<count<<" itterations ("<<percent<<"%)  \r"<<std::flush; \
       last_percent=percent; \
       last_count=count; \
     } \
@@ -126,10 +125,10 @@ bool Lanczos(const smat_T& A, vec_T& x, const vec_T& y, \
     /* dvw = (w1,v2) */ \
     InnerProduct(dvw,w1,v2); \
     if (IsZero(dvw)) { \
-      cout<<"Lanczos: "<<count<<" itterations        \n"; \
+      std::cout<<"Lanczos: "<<count<<" itterations        "<<std::endl; \
       if (IsZero(w1)) \
 	break; \
-      cerr<<"Lanczos() algorithm failed!\n"; \
+      std::cerr<<"Lanczos() algorithm failed!"<<std::endl; \
       return false; \
     } \
  \

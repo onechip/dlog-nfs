@@ -60,7 +60,7 @@ inline void mul(svec_ZZ_p& result, const svec_ZZ& a, const ZZ_p& b) {
 // inner product (svec_long and svec_ZZ_p)
 inline void InnerProduct(ZZ_p& result, const svec_long& a, const vec_ZZ_p& b) {
   if (a.length()!=b.length()) {
-    cerr<<"InnerProduct() length mismatch\n";
+    std::cerr<<"InnerProduct() length mismatch"<<std::endl;
     exit(1);
   }
   clear(result);
@@ -73,7 +73,7 @@ inline void InnerProduct(ZZ_p& result, const svec_long& a, const vec_ZZ_p& b) {
 // inner product (svec_ZZ and svec_ZZ_p)
 inline void InnerProduct(ZZ_p& result, const svec_ZZ& a, const vec_ZZ_p& b) {
   if (a.length()!=b.length()) {
-    cerr<<"InnerProduct() length mismatch\n";
+    std::cerr<<"InnerProduct() length mismatch"<<std::endl;
     exit(1);
   }
   clear(result);

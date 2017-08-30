@@ -33,7 +33,7 @@ inline ZZ_p operator/(const ZZ_p& a, const ZZ& b) {
 template <class svec_T, class vec_T>
 inline void InnerProduct(ZZ_p& result, const svec_T& a, const vec_T& b) {
   if (a.length()!=b.length()) {
-    cerr<<"InnerProduct() length mismatch\n";
+    std::cerr<<"InnerProduct() length mismatch"<<std::endl;
     exit(1);
   }
   clear(result);
