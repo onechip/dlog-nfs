@@ -97,7 +97,7 @@ void DLog_IC_Base::add_cache(const ZZ& prime, const ZZ& log) {
   }
   if ((low<ncache)&&(cache_prime[low]==prime)) {
     // this should never happen
-    cerr<<"DLog_IC_Base::add_cache() prime already in cache\n";
+    std::cerr<<"DLog_IC_Base::add_cache() prime already in cache"<<std::endl;
     exit(1);
   }
   // make room for new entry
@@ -160,14 +160,13 @@ ZZ DLog_IC_Base::log_g(const ZZ_p& pw, bool cacheonly) {
     --result;
 
     if ((VERBOSE)&&(result<-1000)) {
-      cout<<"DLog_IC_Base::log_g() searching... ("<<(-result)<<")  \r";
-      cout.flush();
+      std::cout<<"DLog_IC_Base::log_g() searching... ("<<(-result)<<")  \r"<<std::flush;
     }
 
   } while (true);
 
   if ((VERBOSE)&&(result<-1000)) {
-    cout<<"\n";
+    std::cout<<std::endl;
   }
 
   // add up logarithms of factors
@@ -194,7 +193,7 @@ ZZ DLog_IC_Base::log_g(const ZZ_p& pw, bool cacheonly) {
 // log of any power relative to base
 ZZ DLog_IC_Base::log(const ZZ_p& pw) {
   if (IsZero(pw)) {
-    cerr<<"DLog_IC_Base::log() log of 0 requested\n";
+    std::cerr<<"DLog_IC_Base::log() log of 0 requested"<<std::endl;
     return to_ZZ(-1);
   }
 
@@ -202,14 +201,14 @@ ZZ DLog_IC_Base::log(const ZZ_p& pw) {
     return ZZ::zero();
 
   if (IsZero(log_base)) {
-    cerr<<"DLog_IC_Base::log() algorithm not initialized\n";
+    std::cerr<<"DLog_IC_Base::log() algorithm not initialized"<<std::endl;
     return to_ZZ(-2);
   }
 
   ZZ l;
   l = log_g(pw);
   if (IsZero(l)) {
-    cerr<<"DLog_IC_Base::log() log_g() returned 0\n";
+    std::cerr<<"DLog_IC_Base::log() log_g() returned 0"<<std::endl;
     return to_ZZ(-1);
   }
 
@@ -229,7 +228,7 @@ ZZ DLog_IC_Base::log(const ZZ_p& pw) {
     }
     GCD(d,lb,ZZ_p::modulus()-1);
     if (!IsOne(d)) {
-      cerr<<"DLog_IC_Base::log() logarithm does not exist\n";
+      std::cerr<<"DLog_IC_Base::log() logarithm does not exist"<<std::endl;
       return to_ZZ(-1);
     }
     InvMod(lb,lb,ZZ_p::modulus()-1);
