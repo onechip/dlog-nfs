@@ -69,31 +69,30 @@ ZZ DLog_dumb::log(const GroupElement& power) {
   do {
     long per = exp*100/maxloop;
     if (per!=last) {
-      cout<<"DLog_dumb::log() "<<per<<"%  \r";
-      cout.flush();
+      std::cout<<"DLog_dumb::log() "<<per<<"%  \r"<<std::flush;
       last=per;
     }
     *p *= *base;
     ++exp;
     if (*p==power) {
       delete p;
-      cout<<'\n';
+      std::cout<<std::endl;
       return to_ZZ(exp);
     }
     if (*p==*power_inv) {
       delete p;
-      cout<<'\n';
+      std::cout<<std::endl;
       return group.size() - to_ZZ(exp);
     }
     if (p->isIdentity()) {
       delete p;
-      cout<<'\n';
+      std::cout<<std::endl;
       return to_ZZ(-1);
     }
     // check, every now and again, if we are taking too long
     if ((limit>0)&&((exp&DLog_dumb_LOOPS_PER_SEC)==0)&&(clock()>end)) {
       delete p;
-      cout<<'\n';
+      std::cout<<std::endl;
       return to_ZZ(-2);
     }
   } while (true);
@@ -149,8 +148,7 @@ ZZ DLog_Pollard::raw(const GroupElement& base,
   do {
     long cur = count*100/maxloop;
     if (cur!=last) {
-      cout<<"DLog_Pollard::raw() "<<cur<<"%  \r";
-      cout.flush();
+      std::cout<<"DLog_Pollard::raw() "<<cur<<"%  \r"<<std::flush;
       last=cur;
     }
     step(*x1,a1,b1,base,power);
@@ -164,18 +162,18 @@ ZZ DLog_Pollard::raw(const GroupElement& base,
     if ((limit>0)&&((count&DLog_dumb_LOOPS_PER_SEC)==0)&&(clock()>end)) {
       delete x1;
       delete x2;
-      cout<<"\n";
+      std::cout<<std::endl;
       return to_ZZ(-2);
     }
     if (++count>maxloop) {
       // log doesn't exist
       delete x1;
       delete x2;
-      cout<<"\n";
+      std::cout<<std::endl;
       return to_ZZ(-1);
     }
   } while (*x1!=*x2);
-  cout<<"\n";
+  std::cout<<std::endl;
 
   delete x1;
   delete x2;
